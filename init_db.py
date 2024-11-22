@@ -57,6 +57,6 @@ data = {
    "last_reviewed": ["1980-01-01", "1980-01-01"],
 }
 memory_state_df = pd.DataFrame(data)
-con.execute("CREATE TABLE IF NOT EXISTS memory_state AS SELECT * FROM memory_state_df")
+con.execute("CREATE OR REPLACE TABLE memory_state AS SELECT * FROM memory_state_df")
 
 con.close()
