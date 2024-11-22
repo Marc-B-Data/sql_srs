@@ -19,7 +19,10 @@ with st.sidebar:
     exercise = con.execute(f"SELECT * from memory_state WHERE theme = '{theme}'").df()
     st.write(exercise)
     ANSWER_FILE = f"answers/{exercise.loc[0, 'exercise_name']}.sql"
-    with open(ANSWER_FILE, "r",) as f:
+    with open(
+        ANSWER_FILE,
+        "r",
+    ) as f:
         ANSWER_STR = f.read()
     solution_df = con.execute(ANSWER_STR).df()
 
