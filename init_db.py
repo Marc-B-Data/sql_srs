@@ -55,7 +55,7 @@ DATA = {
     "theme": ["cross_joins", "cross_joins"],
     "exercise_name": ["beverages_and_food", "sizes_and_trademarks"],
     "tables": [["beverages", "food_items"], ["sizes", "trademarks"]],
-    "last_reviewed": ["1980-01-01", "1970-01-01"],
+    "last_reviewed": ["1970-01-01", "1970-01-01"],
 }
 memory_state_df = pd.DataFrame(DATA)
 con.execute("CREATE OR REPLACE TABLE memory_state AS SELECT * FROM memory_state_df")

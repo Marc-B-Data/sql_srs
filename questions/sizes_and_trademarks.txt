@@ -1,0 +1,1 @@
+Write a cross join between 'sizes' and 'trademarks' tables
