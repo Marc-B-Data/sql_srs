@@ -19,6 +19,7 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
     with open("init_db.py", "r") as idb:
         exec(idb.read())
 
+
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
 
@@ -30,27 +31,40 @@ def check_users_solution(user_query: str) -> bool:
     :param user_query: a string containing the query inserted by the user
     Returns True if solution is right, returns False in any others cases
     """
-    result = con.execute(user_query).df()
+    try:
+        result = con.execute(user_query).df()
+    except duckdb.ParserException:
+        st.write(":x: There is a syntax error in the query")
+        return False
     st.dataframe(result)
     if len(result.columns) != len(
         solution_df.columns
     ):  # replace with try result = result[solution_df.columns]
-        st.write("Some columns are missing")
+        st.write(":x: Some columns are missing")
         return False
     try:
         result = result[solution_df.columns]
-        # st.dataframe(result.compare(solution_df))
-        result.compare(solution_df)
+        if len(result.compare(solution_df)) > 0:
+            st.dataframe(result.compare(solution_df))
     except KeyError:
-        st.write("Some columns are missing or with bad values")
+        st.write(":x: Some columns are missing or with bad values")
         return False
     n_lines_difference = result.shape[0] - solution_df.shape[0]
     if n_lines_difference != 0:
         st.write(
-            f"Result has a {n_lines_difference} lines difference with the solution_df"
+            f":x: Result has a {n_lines_difference} lines difference with the solution_df"
         )
         return False
     return True
+
+
+def reset_user_query_text_area() -> None:
+    """
+    Callback function used to reset the user query area when someone click on
+    review or reset buttons
+    """
+    if st.session_state.ta_user_query != "":
+        st.session_state.ta_user_query = ""
 
 
 def manage_update_button(recall_nb_days: int, local_exercise_name) -> None:
@@ -61,7 +75,7 @@ def manage_update_button(recall_nb_days: int, local_exercise_name) -> None:
     :local_exercise_name: Exercise name in the memory_state table
     """
     if recall_nb_days == 0:
-        if st.button("Reset"):
+        if st.button("Reset", on_click=reset_user_query_text_area):
             con.execute(
                 """
                 UPDATE memory_state 
@@ -70,7 +84,9 @@ def manage_update_button(recall_nb_days: int, local_exercise_name) -> None:
             )
             st.rerun()
     else:
-        if st.button(f"Review in {recall_nb_days} days"):
+        if st.button(
+            f"Review in {recall_nb_days} days", on_click=reset_user_query_text_area
+        ):
             next_review = date.today() + timedelta(days=recall_nb_days)
             con.execute(
                 f"""
@@ -102,7 +118,11 @@ with st.sidebar:
         .sort_values("last_reviewed")
         .reset_index()
     )
-    st.write(exercise)
+
+    check_debug = st.checkbox("Display debug info")
+    if check_debug:
+        st.dataframe(exercise)
+        st.write(st.session_state)
     exercise_name = exercise.loc[0, "exercise_name"]
 
     # Get and display answer file
@@ -122,15 +142,15 @@ with st.sidebar:
     ) as f:
         question_str = f.read()
 
-st.header("Train your SQL code :point_down:")
+st.header("Train with SQL code :point_down:")
 st.text(f"Instructions : \n {question_str}")
 form = st.form("my_form")
-query = form.text_area(label="Your SQL code here", key="user_input")
+query = form.text_area(label="Your SQL code here", key="ta_user_query")
 form.form_submit_button("Submit")
 
 if query:
     if check_users_solution(query):
-        st.write("Good job ! You're the boss :wave:")
+        st.write(":white_check_mark: Good job ! You're the boss :wave:")
 
 col0, col2, col7, col21 = st.columns(4)
 
